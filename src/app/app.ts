@@ -156,9 +156,12 @@ this.cdr.detectChanges();
 
   normalize(text: string): string {
     return text
-      .toLowerCase()
       .trim()
       .replace(/[´`‘’‚‛‹›ʻʼʹ]/g, "'");
+  }
+
+  normalizeLower(text: string): string {
+    return this.normalize(text).toLowerCase();
   }
 
   removeBrackets(text: string) {
@@ -176,23 +179,53 @@ this.cdr.detectChanges();
   checkAnswer() {
     const correctRaw = this.quizList[this.index].en;
 
-    const userNorm = this.normalize(this.answer);
-    const correctNorm = this.normalize(correctRaw);
+    // Exakte Prüfung (Groß-/Kleinschreibung beachten)
+    const userExact = this.normalize(this.answer);
+    const correctExact = this.normalize(correctRaw);
 
-    const noBrackets = this.normalize(this.removeBrackets(correctRaw));
-    const noPunct = this.normalize(this.removePunctuation(correctRaw));
-    const noSpaces = this.normalize(this.removeSpaces(correctRaw));
+    // Groß-/Kleinschreibung ignorieren
+    const userLower = this.normalizeLower(this.answer);
+    const correctLower = this.normalizeLower(correctRaw);
+
+    const noBrackets = this.normalizeLower(
+      this.removeBrackets(correctRaw)
+    );
+
+    const noPunct = this.normalizeLower(
+      this.removePunctuation(correctRaw)
+    );
+
+    const noSpaces = this.normalizeLower(
+      this.removeSpaces(correctRaw)
+    );
 
     let result = 'wrong';
 
-    if (userNorm === correctNorm) {
+    // Perfekt
+    if (userExact === correctExact) {
       result = 'correct';
-    } else if (userNorm === noBrackets) {
+    }
+
+    // Nur Groß-/Kleinschreibung falsch
+    else if (userLower === correctLower) {
       result = 'partial';
-    } else if (userNorm === noPunct) {
+    }
+
+    // Klammern ignoriert
+    else if (userLower === noBrackets) {
       result = 'partial';
-    } else if (userNorm === noSpaces) {
-      result = 'correct';
+    }
+
+    // Satzzeichen ignoriert
+    else if (userLower === noPunct) {
+      result = 'partial';
+    }
+
+    // Leerzeichen vergessen/anders gesetzt
+    else if (
+      this.removeSpaces(userLower) === noSpaces
+    ) {
+      result = 'partial';
     }
 
     if (result === 'correct') {
@@ -207,14 +240,13 @@ this.cdr.detectChanges();
         this.updateProgressBar('partial');
         this.nextButtonColor = '#FF9800';
         this.feedback =
-            `Teilweise richtig. Richtige Antwort: ${correctRaw}`;
-
+          `Teilweise richtig. Richtige Antwort: ${correctRaw}`;
       } else {
-          this.wrong++;
-          this.updateProgressBar('wrong');
-          this.nextButtonColor = '#f44336';
-          this.feedback =
-              `Falsch. Richtige Antwort: ${correctRaw}`;
+        this.wrong++;
+        this.updateProgressBar('wrong');
+        this.nextButtonColor = '#f44336';
+        this.feedback =
+          `Falsch. Richtige Antwort: ${correctRaw}`;
       }
     }
   }
