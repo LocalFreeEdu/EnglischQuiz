@@ -46,7 +46,7 @@ export class App implements OnInit {
   progressCells: string[] = [];
   vocab: Vocabulary[] = [
     {en:"at", de:"in; an; um; bei; auf"},
-    {en:"Good Morning.", de:"Guten Morgen."},
+    {en:"Good morning.", de:"Guten Morgen."},
     {en:"boy", de:"der Junge"},
     {en:"girl", de:"das Mädchen"},
     {en:"to look at", de:"anschauen"},
