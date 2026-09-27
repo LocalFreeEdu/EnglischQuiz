@@ -1,0 +1,111 @@
+<!-- LINKS: Feedback + Quiz -->
+<div id="left-area">
+
+  <div id="feedback-header">
+
+    <div id="feedback-title">
+      Feedback
+    </div>
+
+    <button
+      id="restart-btn"
+      (click)="startQuiz()">
+      Quiz neu starten
+    </button>
+
+  </div>
+
+  <div id="progress-bar">
+
+    @for(cell of progressCells; track $index) {
+
+      <div
+        class="progress-cell"
+        [style.background]="
+          cell === 'correct'
+            ? 'green'
+            : cell === 'partial'
+            ? '#FF9800'
+            : cell === 'wrong'
+            ? 'red'
+            : '#dcdcdc'
+        ">
+      </div>
+
+    }
+
+  </div>
+
+  <div id="quiz-box">
+
+    <h1>Englisch-Vokabel-Quiz</h1>
+
+    @if(quizList.length === 0){
+
+        <p id="question">
+            Vokabeln werden zusammengestellt...
+        </p>
+
+    }
+    @else {
+
+        <p id="question">
+            ({{ index + 1 }}/{{ quizList.length }})
+            Deutsch: {{ quizList[index].de }}
+            <!--Deutsch: {{ currentWord }}-->
+        </p>
+
+        <!-- Rest des Quiz -->
+         <input
+        #answerInput
+        autofocus
+        id="answer-input"
+        type="text"
+        placeholder="Englisches Wort eingeben"
+        [(ngModel)]="answer"
+        [disabled]="answerLocked">
+
+
+        @if(endofquiz){
+
+          <button
+              id="restart-end-btn"
+              (click)="startQuiz()">
+              Quiz neu starten
+          </button>
+
+        }
+        @else if(!answerLocked){
+
+          <button
+              id="check-btn"
+              (click)="checkAnswer()">
+              Antwort prüfen
+          </button>
+
+        }
+        @else{
+
+          <button
+              id="next-btn"
+              [style.background]="nextButtonColor"
+              (click)="nextQuestion()">
+              Weiter
+          </button>
+
+        }
+
+
+      @if(feedback){
+
+        <p id="correct-answer">
+          {{ feedback }}
+        </p>
+
+      }
+    }
+
+
+  </div>
+
+</div>
