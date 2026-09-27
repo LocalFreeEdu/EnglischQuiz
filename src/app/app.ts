@@ -177,76 +177,84 @@ this.cdr.detectChanges();
   }
 
   checkAnswer() {
-    const correctRaw = this.quizList[this.index].en;
 
-    // Exakte Prüfung (Groß-/Kleinschreibung beachten)
-    const userExact = this.normalize(this.answer);
-    const correctExact = this.normalize(correctRaw);
-
-    // Groß-/Kleinschreibung ignorieren
-    const userLower = this.normalizeLower(this.answer);
-    const correctLower = this.normalizeLower(correctRaw);
-
-    const noBrackets = this.normalizeLower(
-      this.removeBrackets(correctRaw)
-    );
-
-    const noPunct = this.normalizeLower(
-      this.removePunctuation(correctRaw)
-    );
-
-    const noSpaces = this.normalizeLower(
-      this.removeSpaces(correctRaw)
-    );
-
-    let result = 'wrong';
-
-    // Perfekt
-    if (userExact === correctExact) {
-      result = 'correct';
+    if (!this.answer || this.answer.trim() === '') {
+    //Nichts machen
+    return;
     }
+    else {
 
-    // Nur Groß-/Kleinschreibung falsch
-    else if (userLower === correctLower) {
-      result = 'partial';
-    }
+      const correctRaw = this.quizList[this.index].en;
 
-    // Klammern ignoriert
-    else if (userLower === noBrackets) {
-      result = 'partial';
-    }
+      // Exakte Prüfung (Groß-/Kleinschreibung beachten)
+      const userExact = this.normalize(this.answer);
+      const correctExact = this.normalize(correctRaw);
 
-    // Satzzeichen ignoriert
-    else if (userLower === noPunct) {
-      result = 'partial';
-    }
+      // Groß-/Kleinschreibung ignorieren
+      const userLower = this.normalizeLower(this.answer);
+      const correctLower = this.normalizeLower(correctRaw);
 
-    // Leerzeichen vergessen/anders gesetzt
-    else if (
-      this.removeSpaces(userLower) === noSpaces
-    ) {
-      result = 'partial';
-    }
+      const noBrackets = this.normalizeLower(
+        this.removeBrackets(correctRaw)
+      );
 
-    if (result === 'correct') {
-      this.correct++;
-      this.updateProgressBar('correct');
-      this.nextQuestion();
-    } else {
-      this.answerLocked = true;
+      const noPunct = this.normalizeLower(
+        this.removePunctuation(correctRaw)
+      );
 
-      if (result === 'partial') {
-        this.partial++;
-        this.updateProgressBar('partial');
-        this.nextButtonColor = '#FF9800';
-        this.feedback =
-          `Teilweise richtig. Richtige Antwort: ${correctRaw}`;
+      const noSpaces = this.normalizeLower(
+        this.removeSpaces(correctRaw)
+      );
+
+      let result = 'wrong';
+
+      // Perfekt
+      if (userExact === correctExact) {
+        result = 'correct';
+      }
+
+      // Nur Groß-/Kleinschreibung falsch
+      else if (userLower === correctLower) {
+        result = 'partial';
+      }
+
+      // Klammern ignoriert
+      else if (userLower === noBrackets) {
+        result = 'partial';
+      }
+
+      // Satzzeichen ignoriert
+      else if (userLower === noPunct) {
+        result = 'partial';
+      }
+
+      // Leerzeichen vergessen/anders gesetzt
+      else if (
+        this.removeSpaces(userLower) === noSpaces
+      ) {
+        result = 'partial';
+      }
+
+      if (result === 'correct') {
+        this.correct++;
+        this.updateProgressBar('correct');
+        this.nextQuestion();
       } else {
-        this.wrong++;
-        this.updateProgressBar('wrong');
-        this.nextButtonColor = '#f44336';
-        this.feedback =
-          `Falsch. Richtige Antwort: ${correctRaw}`;
+        this.answerLocked = true;
+
+        if (result === 'partial') {
+          this.partial++;
+          this.updateProgressBar('partial');
+          this.nextButtonColor = '#FF9800';
+          this.feedback =
+            `Teilweise richtig. Richtige Antwort: ${correctRaw}`;
+        } else {
+          this.wrong++;
+          this.updateProgressBar('wrong');
+          this.nextButtonColor = '#f44336';
+          this.feedback =
+            `Falsch. Richtige Antwort: ${correctRaw}`;
+        }
       }
     }
   }
