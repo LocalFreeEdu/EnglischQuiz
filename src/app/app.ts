@@ -58,7 +58,7 @@ export class App implements OnInit {
     {en:"to be", de:"sein"},
     {en:"quiet", de:"ruhig; leise; still"},
     {en:"to listen (to)", de:"zuhören; anhören; hören"},
-    {en:"Don't talk.", de:"Sei(d) still.; Red(t) nicht."},
+    {en:"Don't talk.", de:"Sei(d) still.; Rede(t) nicht."},
     {en:"Sorry.", de:"Tut mir leid.; Entschuldigung."},
     {en:"here", de:"hier"},
     {en:"book", de:"das Buch; das Heft"},
@@ -154,8 +154,11 @@ startQuiz() {
 this.cdr.detectChanges();
 }
 
-  normalize(text: string) {
-    return text.toLowerCase().trim();
+  normalize(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[´`‘’‚‛‹›ʻʼʹ]/g, "'");
   }
 
   removeBrackets(text: string) {

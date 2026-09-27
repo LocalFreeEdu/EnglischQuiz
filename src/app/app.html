@@ -63,7 +63,10 @@
         type="text"
         placeholder="Englisches Wort eingeben"
         [(ngModel)]="answer"
-        [disabled]="answerLocked">
+        [disabled]="answerLocked"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false">
 
 
         @if(endofquiz){
