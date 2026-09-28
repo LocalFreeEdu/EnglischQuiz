@@ -102,6 +102,7 @@ this.cdr.detectChanges();
     return text
       .trim()
       .replace(/[´`‘’‚‛‹›ʻʼʹ]/g, "'")
+      .replace(/…/g, "...")
       .replace(/^to\s+/i, '');
   }
 
