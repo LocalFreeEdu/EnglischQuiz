@@ -7,6 +7,19 @@
       Feedback
     </div>
 
+    <input
+    type="file"
+    #fileInput
+    accept=".csv"
+    style="display:none"
+    (change)="onFileSelected($event)">
+
+    <button
+    id="upload-btn"
+    (click)="fileInput.click()">
+    Vokabelliste laden
+    </button>
+
     <button
       id="restart-btn"
       (click)="startQuiz()">
@@ -40,10 +53,10 @@
 
     <h1>Englisch-Vokabel-Quiz</h1>
 
-    @if(quizList.length === 0){
+    @if(vocab.length === 0){
 
         <p id="question">
-            Vokabeln werden zusammengestellt...
+            Bitte Vokabelliste auswählen
         </p>
 
     }
@@ -58,7 +71,6 @@
         <!-- Rest des Quiz -->
          <input
         #answerInput
-        autofocus
         id="answer-input"
         type="text"
         placeholder="Englisches Wort eingeben"

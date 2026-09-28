@@ -44,59 +44,7 @@ export class App implements OnInit {
 
   nextButtonColor = '#4CAF50';
   progressCells: string[] = [];
-  vocab: Vocabulary[] = [
-    {en:"at", de:"in; an; um; bei; auf"},
-    {en:"Good morning.", de:"Guten Morgen."},
-    {en:"boy", de:"der Junge"},
-    {en:"girl", de:"das Mädchen"},
-    {en:"to look at", de:"anschauen"},
-    {en:"board", de:"Die Tafel"},
-    {en:"Can you help me?", de:"Können Sie mir helfen?; Kannst du mir helfen?"},
-    {en:"yes", de:"ja"},
-    {en:"of course", de:"natürlich; selbstverständlich"},
-    {en:"to sit down", de:"sich hinsetzen"},
-    {en:"to be", de:"sein"},
-    {en:"quiet", de:"ruhig; leise; still"},
-    {en:"to listen (to)", de:"zuhören; anhören; hören"},
-    {en:"Don't talk.", de:"Sei(d) still.; Rede(t) nicht."},
-    {en:"Sorry.", de:"Tut mir leid.; Entschuldigung."},
-    {en:"here", de:"hier"},
-    {en:"book", de:"das Buch; das Heft"},
-    {en:"Excuse me!", de:"Entschuldigung!"},
-    {en:"to have", de:"haben"},
-    {en:"an", de:"ein/eine"},
-    {en:"pen", de:"der Füller; der Stift"},
-    {en:"Here you are.", de:"Bitte schön."},
-    {en:"bag", de:"die Tasche; die Tüte"},
-    {en:"folder", de:"der Ordner; die Mappe"},
-    {en:"exercise book", de:"das Übungsheft"},
-    {en:"phone", de:"das Handy; das Telefon"},
-    {en:"tablet", de:"das Tablet"},
-    {en:"pencil", de:"der Bleistift; der Buntstift"},
-    {en:"pair of scissors", de:"die Schere"},
-    {en:"sharpener", de:"der Spitzer"},
-    {en:"rubber", de:"der Radiergummi"},
-    {en:"ruler", de:"das Lineal"},
-    {en:"pencil case", de:"das Federmäppchen"},
-    {en:"there are", de:"das sind; es gibt"},
-    {en:"for", de:"für"},
-    {en:"no", de:"nein; kein/keine"},
-    {en:"to close", de:"schließen; zumachen"},
-    {en:"to open", de:"öffnen; aufmachen"},
-    {en:"again", de:"noch einmal; wieder"},
-    {en:"to write", de:"schreiben"},
-    {en:"on", de:"auf; an"},
-    {en:"to take out", de:"herausnehmen; herausbringen"},
-    {en:"rule", de:"die Regel"},
-    {en:"classroom", de:"das Klassenzimmer"},
-    {en:"playground", de:"der Schulhof; der Pausenhof; der Spielplatz"},
-    {en:"cafeteria", de:"die Cafeteria; die Mensa"},
-    {en:"toilet", de:"die Toilette"},
-    {en:"library", de:"die Bibliothek; die Bücherei"},
-    {en:"gym", de:"die Turnhalle; das Fitnessstudio"},
-    {en:"office", de:"das Büro"}
-    // Rest der Liste hier einfügen
-  ];
+  vocab: Vocabulary[] = [];
 
   quizList: Vocabulary[] = [];
   index = 0;
@@ -118,11 +66,7 @@ export class App implements OnInit {
 
  ngOnInit(): void {
 
-    setTimeout(() => {
-
-        this.startQuiz();
-
-    }, 50);
+//Nichts zu tun
 
 }
 
@@ -157,7 +101,8 @@ this.cdr.detectChanges();
   normalize(text: string): string {
     return text
       .trim()
-      .replace(/[´`‘’‚‛‹›ʻʼʹ]/g, "'");
+      .replace(/[´`‘’‚‛‹›ʻʼʹ]/g, "'")
+      .replace(/^to\s+/i, '');
   }
 
   normalizeLower(text: string): string {
@@ -305,5 +250,69 @@ this.cdr.detectChanges();
       this.answerInput?.nativeElement.focus();
     }, 100);
   }
+
+onFileSelected(event: Event) {
+
+  const input = event.target as HTMLInputElement;
+
+  if (!input.files?.length) {
+    return;
+  }
+
+  const file = input.files[0];
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+
+    const content = reader.result as string;
+
+    const lines = content
+      .split(/\r?\n/)
+      .filter(line => line.trim() !== '');
+
+    // vorhandene Vokabeln löschen
+    this.vocab = [];
+
+    // Erste Zeile überspringen
+    for (let i = 1; i < lines.length; i++) {
+
+      const match = lines[i].match(
+        /^([^;]+);(.*)$/
+      );
+
+      if (!match) {
+        continue;
+      }
+
+      const english = match[1].trim();
+
+      const german = match[2]
+        .trim()
+        .replace(/^"/, '')
+        .replace(/"$/, '');
+
+      this.vocab.push({
+        en: english,
+        de: german
+      });
+
+    }
+
+    /*console.log(this.vocab);
+
+    console.log("Vokabeln:", this.vocab.length);*/
+    
+    this.startQuiz();
+
+    /*console.log("Quiz:", this.quizList.length);*/
+
+    this.cdr.detectChanges();
+
+  };
+
+  reader.readAsText(file, 'iso-8859-1');
+
+}
 
 }
