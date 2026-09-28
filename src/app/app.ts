@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 interface Vocabulary {
   en: string;
   de: string;
+  isNew?: boolean;
 }
 
 @Component({
@@ -79,9 +80,52 @@ startQuiz() {
 
     this.progressCells = Array(15).fill('gray');
 
-    this.quizList = [...this.vocab]
+    const newWords =
+      this.vocab.filter(v => v.isNew);
+
+    const oldWords =
+      this.vocab.filter(v => !v.isNew);
+
+    /*console.log(
+      'Neu:',
+      newWords.length,
+      'Alt:',
+      oldWords.length
+    );*/
+
+    if (newWords.length > 0) {
+
+      const selectedNew = [...newWords]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
+
+      const selectedOld = [...oldWords]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5);
+
+      
+
+      /*console.log(
+        'Ausgewählt:',
+        selectedNew.length,
+        'neu und',
+        selectedOld.length,
+        'alt'
+      );*/
+
+      this.quizList = [
+        ...selectedNew,
+        ...selectedOld
+      ]
+      .sort(() => Math.random() - 0.5);
+
+    } else {
+
+      // Alte CSV-Datei ohne dritte Spalte
+      this.quizList = [...this.vocab]
         .sort(() => Math.random() - 0.5)
         .slice(0, 15);
+    }
 
     this.index = 0;
     this.correct = 0;
@@ -279,7 +323,7 @@ onFileSelected(event: Event) {
     for (let i = 1; i < lines.length; i++) {
 
       const match = lines[i].match(
-        /^([^;]+);(.*)$/
+        /^([^;]+);(?:"([^"]*)"|([^;]*))(?:;(.*))?$/
       );
 
       if (!match) {
@@ -288,14 +332,16 @@ onFileSelected(event: Event) {
 
       const english = match[1].trim();
 
-      const german = match[2]
-        .trim()
-        .replace(/^"/, '')
-        .replace(/"$/, '');
+      const german = (match[2] ?? match[3] ?? '')
+        .trim();
+
+      const isNew =
+        (match[4] ?? '').trim() !== '';
 
       this.vocab.push({
         en: english,
-        de: german
+        de: german,
+        isNew
       });
 
     }
