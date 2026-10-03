@@ -1,10 +1,9 @@
 import { Component, HostListener, ViewChild, ElementRef, OnInit, ChangeDetectorRef,} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
-
+import { log } from 'node:console';
 
 interface Vocabulary {
-  en: string;
+  en: string[];
   de: string;
   isNew?: boolean;
 }
@@ -23,8 +22,6 @@ export class App implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleEnter(event: KeyboardEvent) {
-
-    /*console.log('Taste:', event.key);*/
 
     if (event.key !== 'Enter') {
       return;
@@ -61,7 +58,6 @@ export class App implements OnInit {
   feedback = '';
 
   constructor(private cdr: ChangeDetectorRef) {
-    /*this.startQuiz();*/
     
   }
 
@@ -74,7 +70,6 @@ export class App implements OnInit {
 startQuiz() {
 
   this.endofquiz = false;
-  //console.log('startQuiz BEGIN');
 
     this.quizList = [];
 
@@ -86,13 +81,6 @@ startQuiz() {
     const oldWords =
       this.vocab.filter(v => !v.isNew);
 
-    /*console.log(
-      'Neu:',
-      newWords.length,
-      'Alt:',
-      oldWords.length
-    );*/
-
     if (newWords.length > 0) {
 
       const selectedNew = [...newWords]
@@ -102,16 +90,6 @@ startQuiz() {
       const selectedOld = [...oldWords]
         .sort(() => Math.random() - 0.5)
         .slice(0, 5);
-
-      
-
-      /*console.log(
-        'Ausgewählt:',
-        selectedNew.length,
-        'neu und',
-        selectedOld.length,
-        'alt'
-      );*/
 
       this.quizList = [
         ...selectedNew,
@@ -137,8 +115,7 @@ startQuiz() {
     this.answerLocked = false;
 
     //this.focusInput();
-    //console.log('startQuiz ENDE');
-//console.log('Laenge', this.quizList.length);
+
 this.cdr.detectChanges();
 }
 
@@ -174,78 +151,123 @@ this.cdr.detectChanges();
     }
     else {
 
-      const correctRaw = this.quizList[this.index].en;
+      const possibleAnswers = this.quizList[this.index].en;
 
-      // Exakte Prüfung (Groß-/Kleinschreibung beachten)
-      const userExact = this.normalize(this.answer);
-      const correctExact = this.normalize(correctRaw);
-
-      // Groß-/Kleinschreibung ignorieren
-      const userLower = this.normalizeLower(this.answer);
-      const correctLower = this.normalizeLower(correctRaw);
-
-      const noBrackets = this.normalizeLower(
-        this.removeBrackets(correctRaw)
-      );
-
-      const noPunct = this.normalizeLower(
-        this.removePunctuation(correctRaw)
-      );
-
-      const noSpaces = this.normalizeLower(
-        this.removeSpaces(correctRaw)
-      );
-
+      // Standardmäßig gehen wir davon aus,
+      // dass die Antwort falsch ist.
       let result = 'wrong';
 
-      // Perfekt
-      if (userExact === correctExact) {
-        result = 'correct';
-      }
+      // Benutzerantwort normalisieren
+      const userExact =
+        this.normalize(this.answer);
 
-      // Nur Groß-/Kleinschreibung falsch
-      else if (userLower === correctLower) {
-        result = 'partial';
-      }
+      // Groß-/Kleinschreibung ignorieren
+      const userLower =
+        this.normalizeLower(this.answer);
 
-      // Klammern ignoriert
-      else if (userLower === noBrackets) {
-        result = 'partial';
-      }
+      // Prüfe die Benutzereingabe gegen alle
+      // möglichen richtigen englischen Antworten.
+      // Das können die Hauptlösung und beliebige
+      // Alternativlösungen aus der CSV sein.
+      for (const correctRaw of possibleAnswers) {
 
-      // Satzzeichen ignoriert
-      else if (userLower === noPunct) {
-        result = 'partial';
-      }
 
-      // Leerzeichen vergessen/anders gesetzt
-      else if (
-        this.removeSpaces(userLower) === noSpaces
-      ) {
-        result = 'partial';
+
+        // Aktuelle korrekte Antwort normalisieren
+        const correctExact =
+          this.normalize(correctRaw);
+
+
+
+        const correctLower =
+          this.normalizeLower(correctRaw);
+
+        // Klammern entfernen
+        const noBrackets =
+          this.normalizeLower(
+            this.removeBrackets(correctRaw)
+          );
+
+        // Satzzeichen entfernen
+        const noPunct =
+          this.normalizeLower(
+            this.removePunctuation(correctRaw)
+          );
+
+        // Leerzeichen entfernen
+        const noSpaces =
+          this.normalizeLower(
+            this.removeSpaces(correctRaw)
+          );
+
+        // Exakte Übereinstimmung:
+        // Antwort komplett korrekt
+        if (userExact === correctExact) {
+          result = 'correct';
+
+          // Weitere Alternativen müssen
+          // nicht mehr geprüft werden.
+          break;
+        }
+
+        // Falls die Antwort bisher noch falsch war,
+        // prüfen wir auf "teilweise richtig".
+        // Dabei werden Groß-/Kleinschreibung,
+        // Klammern, Satzzeichen oder Leerzeichen
+        // toleriert.
+        if (
+          result === 'wrong' &&
+          (
+            userLower === correctLower ||
+            userLower === noBrackets ||
+            userLower === noPunct ||
+            this.removeSpaces(userLower) === noSpaces
+          )
+        ) {
+          result = 'partial';
+        }
       }
+      
+      const displayAnswer =
+      possibleAnswers.join(' | ');
 
       if (result === 'correct') {
+
         this.correct++;
+
         this.updateProgressBar('correct');
+
         this.nextQuestion();
+
       } else {
+
         this.answerLocked = true;
 
         if (result === 'partial') {
+
           this.partial++;
+
           this.updateProgressBar('partial');
+
           this.nextButtonColor = '#FF9800';
+
           this.feedback =
-            `Teilweise richtig. Richtige Antwort: ${correctRaw}`;
+            `Teilweise richtig. Richtige Antwort: ${displayAnswer}`;
+
         } else {
+
           this.wrong++;
+
           this.updateProgressBar('wrong');
+
           this.nextButtonColor = '#f44336';
+
           this.feedback =
-            `Falsch. Richtige Antwort: ${correctRaw}`;
+            `Falsch. Richtige Antwort: ${displayAnswer}`;
         }
       }
+
+
     }
   }
 
@@ -268,11 +290,6 @@ this.cdr.detectChanges();
       setTimeout(() => {
 
           this.answerInput.nativeElement.focus();
-
-          /*console.log(
-              'Aktives Element:',
-              document.activeElement
-          );*/
 
       }, 50);
     }
@@ -322,38 +339,40 @@ onFileSelected(event: Event) {
     // Erste Zeile überspringen
     for (let i = 1; i < lines.length; i++) {
 
-      const match = lines[i].match(
-        /^([^;]+);(?:"([^"]*)"|([^;]*))(?:;(.*))?$/
-      );
+      const fields =
+        this.parseCsvLine(lines[i]);
 
-      if (!match) {
-        continue;
-      }
+      const english =
+        fields[0]?.trim() ?? '';
 
-      const english = match[1].trim();
+      const german =
+        fields[1]?.trim() ?? '';
 
-      const german = (match[2] ?? match[3] ?? '')
-        .trim();
+      const alternatives =
+        (fields[2] ?? '')
+          .split('|')
+          .map(x => x.trim())
+          .filter(x => x !== '');
+
+
+      const englishAnswers = [
+        english,
+        ...alternatives
+      ];
 
       const isNew =
-        (match[4] ?? '').trim() !== '';
+        (fields[3] ?? '').trim() !== '';
 
       this.vocab.push({
-        en: english,
+        en: englishAnswers,
         de: german,
         isNew
       });
 
+
     }
-
-    /*console.log(this.vocab);
-
-    console.log("Vokabeln:", this.vocab.length);*/
     
     this.startQuiz();
-
-    /*console.log("Quiz:", this.quizList.length);*/
-
     this.cdr.detectChanges();
 
   };
@@ -361,5 +380,30 @@ onFileSelected(event: Event) {
   reader.readAsText(file, 'iso-8859-1');
 
 }
+
+  parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      }
+      else if (char === ';' && !inQuotes) {
+        result.push(current);
+        current = '';
+      }
+      else {
+        current += char;
+      }
+    }
+
+    result.push(current);
+
+    return result;
+  }
 
 }
