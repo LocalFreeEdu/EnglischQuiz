@@ -59,6 +59,12 @@ export class App implements OnInit {
   answerLocked = false;
   feedback = '';
 
+  abkuerzungen: Record<string, string> = {
+    PE: 'Physical Education',
+    RE: 'Religious Education',
+    IT: 'Information Technology'
+  };
+
   constructor(private cdr: ChangeDetectorRef) {
     
   }
@@ -189,6 +195,22 @@ this.cdr.detectChanges();
     return this.normalize(text).toLowerCase();
   }
 
+  erweitereAbkuerzungen(text: string): string {
+
+    let result = text;
+
+    for (const [kurzform, langform] of Object.entries(this.abkuerzungen)) {
+
+      result = result.replace(
+        new RegExp(`\\b${kurzform}\\b`, 'gi'),
+        langform
+      );
+
+    }
+
+    return result;
+  }
+
   removeBrackets(text: string) {
     return text.replace(/\(.*?\)/g, '').trim();
   }
@@ -215,13 +237,19 @@ this.cdr.detectChanges();
       // dass die Antwort falsch ist.
       let result = 'wrong';
 
+      // Im Themenmodus Abkürzungen erweitern
+      const userText =
+        this.isTopicMode
+          ? this.erweitereAbkuerzungen(this.answer)
+          : this.answer;
+
       // Benutzerantwort normalisieren
       const userExact =
-        this.normalize(this.answer);
+        this.normalize(userText);
 
       // Groß-/Kleinschreibung ignorieren
       const userLower =
-        this.normalizeLower(this.answer);
+        this.normalizeLower(userText);
 
       // Prüfe die Benutzereingabe gegen alle
       // möglichen richtigen englischen Antworten.
@@ -229,16 +257,18 @@ this.cdr.detectChanges();
       // Alternativlösungen aus der CSV sein.
       for (const correctRaw of possibleAnswers) {
 
+      // Im Themenmodus Abkürzungen erweitern
+      const correctText =
+        this.isTopicMode
+          ? this.erweitereAbkuerzungen(correctRaw)
+          : correctRaw;
 
+      // Aktuelle korrekte Antwort normalisieren
+      const correctExact =
+        this.normalize(correctText);
 
-        // Aktuelle korrekte Antwort normalisieren
-        const correctExact =
-          this.normalize(correctRaw);
-
-
-
-        const correctLower =
-          this.normalizeLower(correctRaw);
+      const correctLower =
+        this.normalizeLower(correctText);
 
         // Klammern entfernen
         const noBrackets =
