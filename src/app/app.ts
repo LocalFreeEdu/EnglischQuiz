@@ -93,8 +93,14 @@ startQuiz() {
 
           const topicEntries =
             this.vocab.filter(
-              v => v.topic === topic
+              v =>
+                v.topic === topic &&
+                !this.quizList.includes(v)
             );
+
+          if (topicEntries.length === 0) {
+            continue;
+          }
 
           const randomEntry =
             topicEntries[
@@ -155,6 +161,8 @@ startQuiz() {
           .slice(0, 15);
       }
 
+    }
+
       this.index = 0;
       this.correct = 0;
       this.partial = 0;
@@ -163,7 +171,6 @@ startQuiz() {
       this.answer = '';
       this.feedback = '';
       this.answerLocked = false;
-    }
 
     //this.focusInput();
 
@@ -441,7 +448,7 @@ onFileSelected(event: Event) {
     }
     else{
       //console.log('Bisheriger Vokabelmodus erkannt');
-    // Erste Zeile überspringen
+      // Erste Zeile überspringen
       for (let i = 1; i < lines.length; i++) {
 
         const fields =
