@@ -202,7 +202,7 @@ this.cdr.detectChanges();
     for (const [kurzform, langform] of Object.entries(this.abkuerzungen)) {
 
       result = result.replace(
-        new RegExp(`\\b${kurzform}\\b`, 'gi'),
+        new RegExp(`\\b${kurzform}\\b`, 'g'),
         langform
       );
 
