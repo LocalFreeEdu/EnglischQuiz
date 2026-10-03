@@ -5,6 +5,7 @@ import { log } from 'node:console';
 interface Vocabulary {
   en: string[];
   de: string;
+  topic?: string;
   isNew?: boolean;
 }
 
@@ -47,6 +48,7 @@ export class App implements OnInit {
   quizList: Vocabulary[] = [];
   index = 0;
   endofquiz = false;
+  isTopicMode = false;
 
   answer = '';
 
@@ -75,44 +77,93 @@ startQuiz() {
 
     this.progressCells = Array(15).fill('gray');
 
-    const newWords =
+
+    if (this.isTopicMode) {
+      // Themenmodus
+      //console.log'startQuiz: Themenmodus');
+      const topicOrder = this.getTopicOrder();
+
+      while (this.quizList.length < 15) {
+        for (const topic of topicOrder) {
+
+          //Abbruchbedingung
+          if (this.quizList.length >= 15) {
+          break;
+          }
+
+          const topicEntries =
+            this.vocab.filter(
+              v => v.topic === topic
+            );
+
+          const randomEntry =
+            topicEntries[
+              Math.floor(
+                Math.random() *
+                topicEntries.length
+              )
+            ];
+
+          /*console.log(
+            topic,
+            topicEntries.length
+          );*/
+
+          this.quizList.push(
+            randomEntry
+          );
+        }
+      }
+
+      /*console.log(
+        'QuizList:',
+        this.quizList.length
+      );*/
+
+    }
+    else {
+      //Vokabelmodus
+      //console.log('startQuiz: Vokabelmodus');
+
+      const newWords =
       this.vocab.filter(v => v.isNew);
 
-    const oldWords =
-      this.vocab.filter(v => !v.isNew);
+      const oldWords =
+        this.vocab.filter(v => !v.isNew);
 
-    if (newWords.length > 0) {
+      if (newWords.length > 0) {
 
-      const selectedNew = [...newWords]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 10);
+        const selectedNew = [...newWords]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 10);
 
-      const selectedOld = [...oldWords]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 5);
+        const selectedOld = [...oldWords]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 5);
 
-      this.quizList = [
-        ...selectedNew,
-        ...selectedOld
-      ]
-      .sort(() => Math.random() - 0.5);
+        this.quizList = [
+          ...selectedNew,
+          ...selectedOld
+        ]
+        .sort(() => Math.random() - 0.5);
 
-    } else {
+      } else {
 
-      // Alte CSV-Datei ohne dritte Spalte
-      this.quizList = [...this.vocab]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 15);
+        // Alte CSV-Datei ohne dritte Spalte
+        this.quizList = [...this.vocab]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 15);
+      }
+
+      this.index = 0;
+      this.correct = 0;
+      this.partial = 0;
+      this.wrong = 0;
+
+      this.answer = '';
+      this.feedback = '';
+      this.answerLocked = false;
     }
-
-    this.index = 0;
-    this.correct = 0;
-    this.partial = 0;
-    this.wrong = 0;
-
-    this.answer = '';
-    this.feedback = '';
-    this.answerLocked = false;
 
     //this.focusInput();
 
@@ -333,44 +384,99 @@ onFileSelected(event: Event) {
       .split(/\r?\n/)
       .filter(line => line.trim() !== '');
 
+    const firstLine =
+      this.parseCsvLine(lines[0]);
+
+    const firstColumn =
+      (firstLine[0] ?? '')
+        .trim()
+        .toLowerCase();
+
+    this.isTopicMode =
+      firstColumn === 'thema';
+
     // vorhandene Vokabeln löschen
     this.vocab = [];
 
-    // Erste Zeile überspringen
-    for (let i = 1; i < lines.length; i++) {
+    if (this.isTopicMode) {
+      //console.log('Themenmodus erkannt');
+      // Hier kommt später die Themenlogik hinein
 
-      const fields =
-        this.parseCsvLine(lines[i]);
+      for (let i = 1; i < lines.length; i++) {
 
-      const english =
-        fields[0]?.trim() ?? '';
+        const fields =
+          this.parseCsvLine(lines[i]);
 
-      const german =
-        fields[1]?.trim() ?? '';
+        const english =
+          fields[2]?.trim() ?? '';
 
-      const alternatives =
-        (fields[2] ?? '')
-          .split('|')
-          .map(x => x.trim())
-          .filter(x => x !== '');
+        const german =
+            fields[1]?.trim() ?? '';
 
+        const field_value =
+          fields[0]?.trim() ?? '';
 
-      const englishAnswers = [
-        english,
-        ...alternatives
-      ];
+        const alternatives =
+          (fields[3] ?? '')
+            .split('|')
+            .map(x => x.trim())
+            .filter(x => x !== '');
 
-      const isNew =
-        (fields[3] ?? '').trim() !== '';
+        const englishAnswers = [
+          english,
+          ...alternatives
+        ];
 
-      this.vocab.push({
-        en: englishAnswers,
-        de: german,
-        isNew
-      });
+        this.vocab.push({
+          en: englishAnswers,
+          de: german,
+          topic: field_value,
+          isNew: false
+        });
 
+      }
 
+      //console.log(this.vocab);
+      
     }
+    else{
+      //console.log('Bisheriger Vokabelmodus erkannt');
+    // Erste Zeile überspringen
+      for (let i = 1; i < lines.length; i++) {
+
+        const fields =
+          this.parseCsvLine(lines[i]);
+
+        const english =
+          fields[0]?.trim() ?? '';
+
+        const german =
+          fields[1]?.trim() ?? '';
+
+        const alternatives =
+          (fields[2] ?? '')
+            .split('|')
+            .map(x => x.trim())
+            .filter(x => x !== '');
+
+
+        const englishAnswers = [
+          english,
+          ...alternatives
+        ];
+
+        const isNew =
+          (fields[3] ?? '').trim() !== '';
+
+        this.vocab.push({
+          en: englishAnswers,
+          de: german,
+          isNew
+        });
+
+
+      }
+  }
     
     this.startQuiz();
     this.cdr.detectChanges();
@@ -404,6 +510,46 @@ onFileSelected(event: Event) {
     result.push(current);
 
     return result;
+  }
+
+  getTopicOrder(): string[] {
+
+    const topics: string[] = [];
+
+    for (const vocabEntry of this.vocab) {
+
+      const topic =
+        vocabEntry.topic ?? '';
+
+      if (
+        topic !== '' &&
+        !topics.includes(topic)
+      ) {
+        topics.push(topic);
+      }
+    }
+
+    const startIndex =
+      Math.floor(
+        Math.random() * topics.length
+      );
+
+    const topicOrder: string[] = [];
+
+    for (let i = 0; i < topics.length; i++) {
+
+      const topicIndex =
+        (startIndex + i) %
+        topics.length;
+
+      topicOrder.push(
+        topics[topicIndex]
+      );
+    }
+
+    //console.log(topicOrder);
+    return topicOrder;
+    
   }
 
 }
