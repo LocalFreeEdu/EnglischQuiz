@@ -7,6 +7,7 @@ interface Vocabulary {
   de: string;
   topic?: string;
   isNew?: boolean;
+  vereinfachterModus?: boolean;
 }
 
 @Component({
@@ -46,9 +47,12 @@ export class App implements OnInit {
   vocab: Vocabulary[] = [];
 
   quizList: Vocabulary[] = [];
+  usedWordIndices: number[] = [];
+  currentWords: { index: number; word: string; }[] = [];
   index = 0;
   endofquiz = false;
   isTopicMode = false;
+  vereinfachterModus = false;
 
   answer = '';
 
@@ -169,18 +173,21 @@ startQuiz() {
 
     }
 
-      this.index = 0;
-      this.correct = 0;
-      this.partial = 0;
-      this.wrong = 0;
+  this.index = 0;
+  this.correct = 0;
+  this.partial = 0;
+  this.wrong = 0;
 
-      this.answer = '';
-      this.feedback = '';
-      this.answerLocked = false;
+  this.answer = '';
+  this.usedWordIndices = [];
+  this.feedback = '';
+  this.answerLocked = false;
 
     //this.focusInput();
 
-this.cdr.detectChanges();
+  this.buildCurrentWords();
+  this.cdr.detectChanges();
+
 }
 
   normalize(text: string): string {
@@ -371,20 +378,30 @@ this.cdr.detectChanges();
       }
 
       this.answer = '';
+      this.usedWordIndices = [];
       this.feedback = '';
       this.answerLocked = false;
 
       this.nextButtonColor = '#4CAF50';
 
-      setTimeout(() => {
+      const useWordButtons =
+        this.isTopicMode &&
+        this.vereinfachterModus;
 
-          this.answerInput.nativeElement.focus();
+      if (!useWordButtons) {
 
-      }, 50);
+        setTimeout(() => {
+            this.answerInput.nativeElement.focus();
+        }, 50);
+
+      }
     }
     else{
       this.endofquiz = true;
     }
+
+    this.quizList[this.index].vereinfachterModus = this.vereinfachterModus;
+    this.buildCurrentWords();
   }
 
   updateProgressBar(type: string) {
@@ -588,6 +605,131 @@ onFileSelected(event: Event) {
     //console.log(topicOrder);
     return topicOrder;
     
+  }
+
+  buildCurrentWords(): void {
+    if (
+      !this.quizList.length ||
+      this.index >= this.quizList.length
+    ) {
+      this.currentWords = [];
+      return;
+    }
+
+    const words =
+      this.quizList[this.index].en[0]
+        .trim()
+        .split(/\s+/)
+        .filter(word => word !== '');
+
+    if (words.length === 1) {
+
+      this.currentWords =
+        words[0]
+          .split('')
+          .map((char, index) => ({
+            word: char,
+            index
+          }))
+          .sort(() => Math.random() - 0.5);
+
+    }
+    else {
+
+      this.currentWords =
+        words
+          .map((word, index) => ({
+            word,
+            index
+          }))
+          .sort(() => Math.random() - 0.5);
+
+    }
+  }
+
+  addWord(word: string, index: number): void {
+
+    if (this.usedWordIndices.includes(index)) {
+      return;
+    }
+
+    const letterMode =
+      this.currentWords.length > 0 &&
+      this.currentWords.every(
+        item => item.word.length === 1
+      );
+
+    if (!letterMode) {
+
+      if (
+        this.answer &&
+        this.answer.trim() !== ''
+      ) {
+        this.answer += ' ';
+      }
+
+    }
+
+    this.answer += word;
+
+    this.usedWordIndices.push(index);
+
+  }
+
+
+  undoLastWord(): void {
+
+  if (this.usedWordIndices.length === 0) {
+    return;
+  }
+
+  this.usedWordIndices.pop();
+
+  this.answer = '';
+
+  for (const index of this.usedWordIndices) {
+
+    const currentWord =
+      this.currentWords.find(
+        word => word.index === index
+      );
+
+    if (!currentWord) {
+      continue;
+    }
+
+    if (
+      this.answer &&
+      !this.isLetterMode()
+    ) {
+      this.answer += ' ';
+    }
+
+    this.answer += currentWord.word;
+
+  }
+
+}
+
+isLetterMode(): boolean {
+
+  return this.currentWords.length > 0 &&
+         this.currentWords.every(
+           item => item.word.length === 1
+         );
+
+}
+
+  toggleVereinfachterModus(): void {
+
+    if (this.vereinfachterModus) {
+
+      this.answer = '';
+      this.usedWordIndices = [];
+      this.quizList[this.index].vereinfachterModus = true;
+
+    }
+
   }
 
 }
