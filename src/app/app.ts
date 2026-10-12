@@ -259,6 +259,12 @@ startQuiz() {
       const userLower =
         this.normalizeLower(userText);
 
+      const userNoPunct =
+      this.normalizeLower(
+        this.removePunctuation(userText)
+      );
+
+
       // Prüfe die Benutzereingabe gegen alle
       // möglichen richtigen englischen Antworten.
       // Das können die Hauptlösung und beliebige
@@ -316,7 +322,7 @@ startQuiz() {
           (
             userLower === correctLower ||
             userLower === noBrackets ||
-            userLower === noPunct ||
+            userNoPunct === noPunct ||
             this.removeSpaces(userLower) === noSpaces
           )
         ) {
