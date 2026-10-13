@@ -147,7 +147,7 @@ startQuiz() {
       const oldWords =
         this.vocab.filter(v => !v.isNew);
 
-      if (newWords.length > 0) {
+      if (newWords.length > 0 && oldWords.length > 0) {
 
         const selectedNew = [...newWords]
           .sort(() => Math.random() - 0.5)
