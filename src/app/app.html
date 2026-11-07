@@ -37,7 +37,11 @@
 
     <button
     id="upload-btn"
-    [style.width]="vocab.length === 0 ? '100%' : 'auto'"
+      [style.width]="
+        vocab.length === 0 || !isTopicMode
+          ? '100%'
+          : 'auto'
+      "
     (click)="fileInput.click()">
     Vokabelliste laden
     </button>
@@ -66,11 +70,11 @@
           class="progress-cell"
           [style.background]="
             cell === 'correct'
-              ? 'green'
+              ? '#4CAF50'
               : cell === 'partial'
               ? '#FF9800'
               : cell === 'wrong'
-              ? 'red'
+              ? '#F44336'
               : '#dcdcdc'
           ">
 
