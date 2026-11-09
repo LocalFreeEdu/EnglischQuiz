@@ -15,6 +15,20 @@
 }
 
 /* --- Flex-Layout für die gesamte Seite --- */
+:host::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    background-image: url('../assets/backgrounds/englischquiz-bg.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    z-index: -1;
+}
+
+
 :host {
     display: flex;
     justify-content: center;
@@ -23,11 +37,6 @@
     border: 8px solid white;
     box-sizing: border-box;
     padding-top: 30px;
-
-    background-image: url('../assets/backgrounds/englischquiz-bg.webp');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
   }
 
 app-root {
